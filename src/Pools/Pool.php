@@ -3,10 +3,6 @@
 namespace Utopia\Pools;
 
 use Exception;
-use Utopia\Telemetry\Adapter as Telemetry;
-use Utopia\Telemetry\Adapter\None as NoTelemetry;
-use Utopia\Telemetry\Gauge;
-use Utopia\Telemetry\Histogram;
 
 /**
  * @template TResource
@@ -58,15 +54,6 @@ class Pool
      */
     protected array $active = [];
 
-    private Gauge $telemetryOpenConnections;
-    private Gauge $telemetryActiveConnections;
-    private Gauge $telemetryIdleConnections;
-    private Gauge $telemetryPoolCapacity;
-    private Histogram $telemetryWaitDuration;
-    private Histogram $telemetryUseDuration;
-    /** @var array<string, int|string> */
-    private array $telemetryAttributes;
-
     /**
      * @param string $name
      * @param int $size
@@ -78,7 +65,6 @@ class Pool
         $this->size = $size;
         $this->init = $init;
         $this->pool = array_fill(0, $size, true);
-        $this->setTelemetry(new NoTelemetry());
     }
 
     /**
@@ -170,31 +156,6 @@ class Pool
     }
 
     /**
-     * @param Telemetry $telemetry
-     * @return $this<TResource>
-     */
-    public function setTelemetry(Telemetry $telemetry): static
-    {
-        $this->telemetryOpenConnections = $telemetry->createGauge('pool.connection.open.count');
-        $this->telemetryActiveConnections = $telemetry->createGauge('pool.connection.active.count');
-        $this->telemetryIdleConnections = $telemetry->createGauge('pool.connection.idle.count');
-        $this->telemetryPoolCapacity = $telemetry->createGauge('pool.connection.capacity.count');
-        $this->telemetryWaitDuration = $telemetry->createHistogram(
-            name: 'pool.connection.wait_time',
-            unit: 's',
-            advisory: ['ExplicitBucketBoundaries' =>  [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10]],
-        );
-        $this->telemetryUseDuration = $telemetry->createHistogram(
-            name: 'pool.connection.use_time',
-            unit: 's',
-            advisory: ['ExplicitBucketBoundaries' =>  [0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10]],
-        );
-        $this->telemetryAttributes = ['pool' => $this->name, 'size' => $this->size];
-
-        return $this;
-    }
-
-    /**
      * Execute a callback with a managed connection
      *
      * @template T
@@ -210,7 +171,6 @@ class Pool
             return $callback($connection->getResource());
         } finally {
             if ($connection !== null) {
-                $this->telemetryUseDuration->record(microtime(true) - $start, $this->telemetryAttributes);
                 $this->reclaim($connection);
             }
         }
@@ -281,7 +241,6 @@ class Pool
             throw new Exception('Failed to get a connection from the pool');
         } finally {
             $this->recordPoolTelemetry();
-            $this->telemetryWaitDuration->record($totalSleepTime, $this->telemetryAttributes);
         }
     }
 
@@ -369,13 +328,5 @@ class Pool
 
     private function recordPoolTelemetry(): void
     {
-        // Connections get removed from $this->pool when they are active
-        $activeConnections = count($this->active);
-        $existingConnections = count($this->pool);
-        $idleConnections = count(array_filter($this->pool, fn ($data) => $data instanceof Connection));
-        $this->telemetryActiveConnections->record($activeConnections, $this->telemetryAttributes);
-        $this->telemetryIdleConnections->record($idleConnections, $this->telemetryAttributes);
-        $this->telemetryOpenConnections->record($activeConnections + $idleConnections, $this->telemetryAttributes);
-        $this->telemetryPoolCapacity->record($activeConnections + $existingConnections, $this->telemetryAttributes);
     }
 }

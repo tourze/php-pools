@@ -4,8 +4,8 @@ namespace Utopia\Tests;
 
 use Exception;
 use PHPUnit\Framework\TestCase;
-use Utopia\Pools\Pool;
 use Utopia\Pools\Group;
+use Utopia\Pools\Pool;
 
 class GroupTest extends TestCase
 {

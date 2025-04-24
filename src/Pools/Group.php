@@ -3,7 +3,6 @@
 namespace Utopia\Pools;
 
 use Exception;
-use Utopia\Telemetry\Adapter as Telemetry;
 
 class Group
 {
@@ -113,15 +112,6 @@ class Group
     {
         foreach ($this->pools as $pool) {
             $pool->setReconnectSleep($reconnectSleep);
-        }
-
-        return $this;
-    }
-
-    public function setTelemetry(Telemetry $telemetry): static
-    {
-        foreach ($this->pools as $pool) {
-            $pool->setTelemetry($telemetry);
         }
 
         return $this;

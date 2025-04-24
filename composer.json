@@ -25,7 +25,7 @@
     }
   },
   "scripts": {
-    "phpstan": "phpstan analyse src -l 2",
+    "phpstan": "phpstan analyse src -l 1",
     "check": "./vendor/bin/phpstan analyse --level max src tests",
     "test": "./vendor/bin/phpunit --configuration phpunit.xml --debug"
   },

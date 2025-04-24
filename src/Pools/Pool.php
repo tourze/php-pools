@@ -272,7 +272,7 @@ class Pool
      * @param Connection<TResource>|null $connection
      * @return $this<TResource>
      */
-    public function reclaim(Connection $connection = null): static
+    public function reclaim(?Connection $connection = null): static
     {
         if ($connection !== null) {
             $this->push($connection);
@@ -290,7 +290,7 @@ class Pool
      * @param Connection<TResource>|null $connection
      * @return $this<TResource>
      */
-    public function destroy(Connection $connection = null): static
+    public function destroy(?Connection $connection = null): static
     {
         try {
             if ($connection !== null) {

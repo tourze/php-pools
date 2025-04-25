@@ -33,8 +33,9 @@
     "php": "^8.1"
   },
   "require-dev": {
+    "phpstan/phpstan": "^2.1",
     "phpunit/phpunit": "^10.0",
-    "phpstan/phpstan": "^2.1"
+    "shipmonk/composer-dependency-analyser": "^1.8"
   },
   "replace": {
     "utopia-php/pools": "*"

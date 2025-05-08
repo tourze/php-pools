@@ -14,6 +14,16 @@
       "email": "team@appwrite.io"
     }
   ],
+  "require": {
+    "php": "^8.1"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^10.0"
+  },
+  "replace": {
+    "utopia-php/pools": "*"
+  },
   "autoload": {
     "psr-4": {
       "Utopia\\Pools\\": "src/Pools"
@@ -28,15 +38,5 @@
     "phpstan": "phpstan analyse src -l 1",
     "check": "./vendor/bin/phpstan analyse --level max src tests",
     "test": "./vendor/bin/phpunit --configuration phpunit.xml --debug"
-  },
-  "require": {
-    "php": "^8.1"
-  },
-  "require-dev": {
-    "phpstan/phpstan": "^2.1",
-    "phpunit/phpunit": "^10.0"
-  },
-  "replace": {
-    "utopia-php/pools": "*"
   }
 }

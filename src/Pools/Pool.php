@@ -217,7 +217,7 @@ class Pool
                         $attempts++;
                         $connection = new Connection(($this->init)());
                         break; // leave loop if successful
-                    } catch (\Exception $e) {
+                    } catch (\Throwable $e) {
                         if ($attempts >= $this->getReconnectAttempts()) {
                             throw new \Exception('Failed to create connection: ' . $e->getMessage());
                         }

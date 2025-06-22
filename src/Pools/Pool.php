@@ -93,7 +93,7 @@ class Pool
 
     /**
      * @param int $reconnectAttempts
-     * @return $this<TResource>
+     * @return static
      */
     public function setReconnectAttempts(int $reconnectAttempts): static
     {
@@ -111,7 +111,7 @@ class Pool
 
     /**
      * @param int $reconnectSleep
-     * @return $this<TResource>
+     * @return static
      */
     public function setReconnectSleep(int $reconnectSleep): static
     {
@@ -129,7 +129,7 @@ class Pool
 
     /**
      * @param int $retryAttempts
-     * @return $this<TResource>
+     * @return static
      */
     public function setRetryAttempts(int $retryAttempts): static
     {
@@ -147,7 +147,7 @@ class Pool
 
     /**
      * @param int $retrySleep
-     * @return $this<TResource>
+     * @return static
      */
     public function setRetrySleep(int $retrySleep): static
     {
@@ -246,7 +246,7 @@ class Pool
 
     /**
      * @param Connection<TResource> $connection
-     * @return $this<TResource>
+     * @return static
      */
     public function push(Connection $connection): static
     {
@@ -270,7 +270,7 @@ class Pool
 
     /**
      * @param Connection<TResource>|null $connection
-     * @return $this<TResource>
+     * @return static
      */
     public function reclaim(?Connection $connection = null): static
     {
@@ -279,8 +279,8 @@ class Pool
             return $this;
         }
 
-        foreach ($this->active as $connection) {
-            $this->push($connection);
+        foreach ($this->active as $activeConnection) {
+            $this->push($activeConnection);
         }
 
         return $this;
@@ -288,7 +288,7 @@ class Pool
 
     /**
      * @param Connection<TResource>|null $connection
-     * @return $this<TResource>
+     * @return static
      */
     public function destroy(?Connection $connection = null): static
     {
@@ -299,9 +299,9 @@ class Pool
                 return $this;
             }
 
-            foreach ($this->active as $connection) {
+            foreach ($this->active as $activeConnection) {
                 $this->pool[] = true;
-                unset($this->active[$connection->getID()]);
+                unset($this->active[$activeConnection->getID()]);
             }
 
             return $this;

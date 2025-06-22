@@ -33,7 +33,7 @@ class Connection
 
     /**
      * @param string $id
-     * @return $this<TResource>
+     * @return static
      */
     public function setID(string $id): static
     {
@@ -51,7 +51,7 @@ class Connection
 
     /**
      * @param TResource $resource
-     * @return $this<TResource>
+     * @return static
      */
     public function setResource(mixed $resource): static
     {
@@ -69,7 +69,7 @@ class Connection
 
     /**
      * @param Pool<TResource> $pool
-     * @return $this<TResource>
+     * @return static
      */
     public function setPool(Pool $pool): static
     {

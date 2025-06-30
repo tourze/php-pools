@@ -2,7 +2,7 @@
 
 namespace Utopia\Tests;
 
-use Exception;
+use Utopia\Pools\Exception\PoolNotFoundException;
 use PHPUnit\Framework\TestCase;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
@@ -33,7 +33,7 @@ class GroupTest extends TestCase
 
         $this->assertInstanceOf(Pool::class, $this->object->get('test'));
 
-        $this->expectException(Exception::class);
+        $this->expectException(PoolNotFoundException::class);
 
         $this->assertInstanceOf(Pool::class, $this->object->get('testx'));
     }
@@ -48,7 +48,7 @@ class GroupTest extends TestCase
 
         $this->object->remove('test');
 
-        $this->expectException(Exception::class);
+        $this->expectException(PoolNotFoundException::class);
 
         $this->assertInstanceOf(Pool::class, $this->object->get('test'));
     }

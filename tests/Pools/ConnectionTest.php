@@ -2,7 +2,7 @@
 
 namespace Utopia\Tests;
 
-use Exception;
+use Utopia\Pools\Exception\PoolConnectionException;
 use PHPUnit\Framework\TestCase;
 use Utopia\Pools\Connection;
 use Utopia\Pools\Pool;
@@ -73,7 +73,7 @@ class ConnectionTest extends TestCase
         $pool = $this->object->getPool();
 
         if ($pool === null) {
-            throw new Exception("Pool should never be null here.");
+            throw new PoolConnectionException("Pool should never be null here.");
         }
 
         $this->assertInstanceOf(Pool::class, $pool);
@@ -107,7 +107,7 @@ class ConnectionTest extends TestCase
 
     public function testReclaimException(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(PoolConnectionException::class);
         $this->object->reclaim();
     }
 

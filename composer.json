@@ -26,7 +26,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Utopia\\Pools\\": "src/Pools"
+      "Utopia\\Pools\\": "src/"
     }
   },
   "autoload-dev": {

@@ -2,7 +2,8 @@
 
 namespace Utopia\Pools;
 
-use Exception;
+use Utopia\Pools\Exception\PoolEmptyException;
+use Utopia\Pools\Exception\PoolConnectionException;
 
 /**
  * @template TResource
@@ -184,7 +185,7 @@ class Pool
      *  4. If a connection is available, return it
      *
      * @return Connection<TResource>
-     * @throws Exception
+     * @throws PoolEmptyException
      * @internal Please migrate to `use`.
      */
     public function pop(): Connection
@@ -199,7 +200,7 @@ class Pool
 
                 if (is_null($connection)) {
                     if ($attempts >= $this->getRetryAttempts()) {
-                        throw new Exception("Pool '{$this->name}' is empty (size {$this->size})");
+                        throw new PoolEmptyException("Pool '{$this->name}' is empty (size {$this->size})");
                     }
 
                     $totalSleepTime += $this->getRetrySleep();
@@ -219,7 +220,7 @@ class Pool
                         break; // leave loop if successful
                     } catch (\Throwable $e) {
                         if ($attempts >= $this->getReconnectAttempts()) {
-                            throw new \Exception('Failed to create connection: ' . $e->getMessage());
+                            throw new PoolConnectionException('Failed to create connection: ' . $e->getMessage());
                         }
                         $totalSleepTime += $this->getReconnectSleep();
                         sleep($this->getReconnectSleep());
@@ -238,7 +239,7 @@ class Pool
                 return $connection;
             }
 
-            throw new Exception('Failed to get a connection from the pool');
+            throw new PoolConnectionException('Failed to get a connection from the pool');
         } finally {
             $this->recordPoolTelemetry();
         }

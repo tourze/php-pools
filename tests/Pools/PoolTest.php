@@ -2,7 +2,7 @@
 
 namespace Utopia\Tests;
 
-use Exception;
+use Utopia\Pools\Exception\PoolEmptyException;
 use PHPUnit\Framework\TestCase;
 use Utopia\Pools\Connection;
 use Utopia\Pools\Pool;
@@ -100,7 +100,7 @@ class PoolTest extends TestCase
         $this->assertEquals('x', $connection->getResource());
 
         // Pool should be empty
-        $this->expectException(Exception::class);
+        $this->expectException(PoolEmptyException::class);
 
         $this->assertInstanceOf(Connection::class, $this->object->pop());
         $this->assertInstanceOf(Connection::class, $this->object->pop());
@@ -220,7 +220,7 @@ class PoolTest extends TestCase
         $this->object->pop();
 
         // Pool should be empty
-        $this->expectException(Exception::class);
+        $this->expectException(PoolEmptyException::class);
 
         $timeStart = \time();
         $this->object->pop();

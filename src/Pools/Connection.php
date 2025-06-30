@@ -2,7 +2,7 @@
 
 namespace Utopia\Pools;
 
-use Exception;
+use Utopia\Pools\Exception\PoolConnectionException;
 
 /**
  * @template TResource
@@ -79,12 +79,12 @@ class Connection
 
     /**
      * @return Pool<TResource>
-     * @throws Exception
+     * @throws PoolConnectionException
      */
     public function reclaim(): Pool
     {
         if ($this->pool === null) {
-            throw new Exception('You cannot reclaim connection that does not have a pool.');
+            throw new PoolConnectionException('You cannot reclaim connection that does not have a pool.');
         }
 
         return $this->pool->reclaim($this);
@@ -92,12 +92,12 @@ class Connection
 
     /**
      * @return Pool<TResource>
-     * @throws Exception
+     * @throws PoolConnectionException
      */
     public function destroy(): Pool
     {
         if ($this->pool === null) {
-            throw new Exception('You cannot destroy connection that does not have a pool.');
+            throw new PoolConnectionException('You cannot destroy connection that does not have a pool.');
         }
 
         return $this->pool->destroy($this);

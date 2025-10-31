@@ -2,47 +2,29 @@
 
 namespace Utopia\Pools;
 
-use Utopia\Pools\Exception\PoolEmptyException;
 use Utopia\Pools\Exception\PoolConnectionException;
+use Utopia\Pools\Exception\PoolEmptyException;
 
 /**
  * @template TResource
  */
 class Pool
 {
-    /**
-     * @var string
-     */
     protected string $name;
 
-    /**
-     * @var int
-     */
     protected int $size = 0;
 
     /**
-     * @var callable
+     * @var callable(): TResource
      */
-    protected $init = null;
+    protected $init;
 
-    /**
-     * @var int
-     */
     protected int $reconnectAttempts = 3;
 
-    /**
-     * @var int
-     */
     protected int $reconnectSleep = 1; // seconds
 
-    /**
-     * @var int
-     */
     protected int $retryAttempts = 3;
 
-    /**
-     * @var int
-     */
     protected int $retrySleep = 1; // seconds
 
     /**
@@ -56,8 +38,6 @@ class Pool
     protected array $active = [];
 
     /**
-     * @param string $name
-     * @param int $size
      * @param callable(): TResource $init
      */
     public function __construct(string $name, int $size, callable $init)
@@ -68,99 +48,63 @@ class Pool
         $this->pool = array_fill(0, $size, true);
     }
 
-    /**
-     * @return string
-     */
     public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return int
-     */
     public function getSize(): int
     {
         return $this->size;
     }
 
-    /**
-     * @return int
-     */
     public function getReconnectAttempts(): int
     {
         return $this->reconnectAttempts;
     }
 
-    /**
-     * @param int $reconnectAttempts
-     * @return static
-     */
-    public function setReconnectAttempts(int $reconnectAttempts): static
+    public function setReconnectAttempts(int $reconnectAttempts): void
     {
         $this->reconnectAttempts = $reconnectAttempts;
-        return $this;
     }
 
-    /**
-     * @return int
-     */
     public function getReconnectSleep(): int
     {
         return $this->reconnectSleep;
     }
 
-    /**
-     * @param int $reconnectSleep
-     * @return static
-     */
-    public function setReconnectSleep(int $reconnectSleep): static
+    public function setReconnectSleep(int $reconnectSleep): void
     {
         $this->reconnectSleep = $reconnectSleep;
-        return $this;
     }
 
-    /**
-     * @return int
-     */
     public function getRetryAttempts(): int
     {
         return $this->retryAttempts;
     }
 
-    /**
-     * @param int $retryAttempts
-     * @return static
-     */
-    public function setRetryAttempts(int $retryAttempts): static
+    public function setRetryAttempts(int $retryAttempts): void
     {
         $this->retryAttempts = $retryAttempts;
-        return $this;
     }
 
-    /**
-     * @return int
-     */
     public function getRetrySleep(): int
     {
         return $this->retrySleep;
     }
 
-    /**
-     * @param int $retrySleep
-     * @return static
-     */
-    public function setRetrySleep(int $retrySleep): static
+    public function setRetrySleep(int $retrySleep): void
     {
         $this->retrySleep = $retrySleep;
-        return $this;
     }
 
     /**
-     * Execute a callback with a managed connection
+     * 使用管理的连接执行回调函数
      *
      * @template T
+     *
      * @param callable(TResource): T $callback Function that receives the connection resource
+     *
      * @return T Return value from the callback
      */
     public function use(callable $callback): mixed
@@ -169,85 +113,131 @@ class Pool
         $connection = null;
         try {
             $connection = $this->pop();
+
             return $callback($connection->getResource());
         } finally {
-            if ($connection !== null) {
+            if (null !== $connection) {
                 $this->reclaim($connection);
             }
         }
     }
 
     /**
-     * Summary:
-     *  1. Try to get a connection from the pool
-     *  2. If no connection is available, wait for one to be released
-     *  3. If still no connection is available, throw an exception
-     *  4. If a connection is available, return it
+     * 摘要：
+     *  1. 尝试从连接池中获取连接
+     *  2. 如果没有可用连接，等待连接释放
+     *  3. 如果仍然没有可用连接，抛出异常
+     *  4. 如果有可用连接，返回该连接
      *
      * @return Connection<TResource>
+     *
      * @throws PoolEmptyException
-     * @internal Please migrate to `use`.
+     *
+     * @internal please migrate to `use`
      */
     public function pop(): Connection
     {
-        $attempts = 0;
-        $totalSleepTime = 0;
-
         try {
-            do {
-                $attempts++;
-                $connection = array_pop($this->pool);
+            $connection = $this->retrieveConnectionFromPool();
+            $connection = $this->ensureConnectionIsCreated($connection);
 
-                if (is_null($connection)) {
-                    if ($attempts >= $this->getRetryAttempts()) {
-                        throw new PoolEmptyException("Pool '{$this->name}' is empty (size {$this->size})");
-                    }
-
-                    $totalSleepTime += $this->getRetrySleep();
-                    sleep($this->getRetrySleep());
-                } else {
-                    break;
-                }
-            } while ($attempts < $this->getRetryAttempts());
-
-            if ($connection === true) { // Pool has space, create connection
-                $attempts = 0;
-
-                do {
-                    try {
-                        $attempts++;
-                        $connection = new Connection(($this->init)());
-                        break; // leave loop if successful
-                    } catch (\Throwable $e) {
-                        if ($attempts >= $this->getReconnectAttempts()) {
-                            throw new PoolConnectionException('Failed to create connection: ' . $e->getMessage());
-                        }
-                        $totalSleepTime += $this->getReconnectSleep();
-                        sleep($this->getReconnectSleep());
-                    }
-                } while ($attempts < $this->getReconnectAttempts());
-            }
-
-            if ($connection instanceof Connection) { // connection is available, return it
-                if (empty($connection->getID())) {
-                    $connection->setID($this->getName() . '-' . uniqid());
-                }
-
-                $connection->setPool($this);
-
-                $this->active[$connection->getID()] = $connection;
-                return $connection;
-            }
-
-            throw new PoolConnectionException('Failed to get a connection from the pool');
+            return $this->prepareConnectionForUse($connection);
         } finally {
             $this->recordPoolTelemetry();
         }
     }
 
     /**
+     * @return Connection<TResource>|true|null
+     *
+     * @throws PoolEmptyException
+     */
+    private function retrieveConnectionFromPool(): Connection|bool|null
+    {
+        $attempts = 0;
+
+        do {
+            ++$attempts;
+            $connection = array_pop($this->pool);
+
+            if (is_null($connection)) {
+                if ($attempts >= $this->getRetryAttempts()) {
+                    throw new PoolEmptyException("Pool '{$this->name}' is empty (size {$this->size})");
+                }
+
+                sleep($this->getRetrySleep());
+            } else {
+                return $connection;
+            }
+        } while ($attempts < $this->getRetryAttempts());
+
+        return null;
+    }
+
+    /**
+     * @param Connection<TResource>|true|null $connection
+     *
+     * @return Connection<TResource>
+     *
+     * @throws PoolConnectionException
+     */
+    private function ensureConnectionIsCreated(Connection|bool|null $connection): Connection
+    {
+        if (true === $connection) {
+            return $this->createNewConnection();
+        }
+
+        if ($connection instanceof Connection) {
+            return $connection;
+        }
+
+        throw new PoolConnectionException('Failed to get a connection from the pool');
+    }
+
+    /**
+     * @return Connection<TResource>
+     *
+     * @throws PoolConnectionException
+     */
+    private function createNewConnection(): Connection
+    {
+        $attempts = 0;
+
+        do {
+            try {
+                ++$attempts;
+
+                return new Connection(($this->init)());
+            } catch (\Throwable $e) {
+                if ($attempts >= $this->getReconnectAttempts()) {
+                    throw new PoolConnectionException('Failed to create connection: ' . $e->getMessage());
+                }
+                sleep($this->getReconnectSleep());
+            }
+        } while ($attempts < $this->getReconnectAttempts());
+
+        throw new PoolConnectionException('Failed to create connection after all attempts');
+    }
+
+    /**
      * @param Connection<TResource> $connection
-     * @return static
+     *
+     * @return Connection<TResource>
+     */
+    private function prepareConnectionForUse(Connection $connection): Connection
+    {
+        if ('' === $connection->getID()) {
+            $connection->setID($this->getName() . '-' . uniqid());
+        }
+
+        $connection->setPool($this);
+        $this->active[$connection->getID()] = $connection;
+
+        return $connection;
+    }
+
+    /**
+     * @param Connection<TResource> $connection
      */
     public function push(Connection $connection): static
     {
@@ -261,9 +251,6 @@ class Pool
         }
     }
 
-    /**
-     * @return int
-     */
     public function count(): int
     {
         return count($this->pool);
@@ -271,12 +258,12 @@ class Pool
 
     /**
      * @param Connection<TResource>|null $connection
-     * @return static
      */
     public function reclaim(?Connection $connection = null): static
     {
-        if ($connection !== null) {
+        if (null !== $connection) {
             $this->push($connection);
+
             return $this;
         }
 
@@ -289,14 +276,14 @@ class Pool
 
     /**
      * @param Connection<TResource>|null $connection
-     * @return static
      */
     public function destroy(?Connection $connection = null): static
     {
         try {
-            if ($connection !== null) {
+            if (null !== $connection) {
                 $this->pool[] = true;
                 unset($this->active[$connection->getID()]);
+
                 return $this;
             }
 
@@ -311,17 +298,11 @@ class Pool
         }
     }
 
-    /**
-     * @return bool
-     */
     public function isEmpty(): bool
     {
-        return empty($this->pool);
+        return [] === $this->pool;
     }
 
-    /**
-     * @return bool
-     */
     public function isFull(): bool
     {
         return count($this->pool) === $this->size;

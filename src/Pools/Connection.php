@@ -23,22 +23,14 @@ class Connection
     {
     }
 
-    /**
-     * @return string
-     */
     public function getID(): string
     {
         return $this->id;
     }
 
-    /**
-     * @param string $id
-     * @return static
-     */
-    public function setID(string $id): static
+    public function setID(string $id): void
     {
         $this->id = $id;
-        return $this;
     }
 
     /**
@@ -51,12 +43,10 @@ class Connection
 
     /**
      * @param TResource $resource
-     * @return static
      */
-    public function setResource(mixed $resource): static
+    public function setResource(mixed $resource): void
     {
         $this->resource = $resource;
-        return $this;
     }
 
     /**
@@ -69,21 +59,20 @@ class Connection
 
     /**
      * @param Pool<TResource> $pool
-     * @return static
      */
-    public function setPool(Pool $pool): static
+    public function setPool(Pool $pool): void
     {
         $this->pool = $pool;
-        return $this;
     }
 
     /**
      * @return Pool<TResource>
+     *
      * @throws PoolConnectionException
      */
     public function reclaim(): Pool
     {
-        if ($this->pool === null) {
+        if (null === $this->pool) {
             throw new PoolConnectionException('You cannot reclaim connection that does not have a pool.');
         }
 
@@ -92,11 +81,12 @@ class Connection
 
     /**
      * @return Pool<TResource>
+     *
      * @throws PoolConnectionException
      */
     public function destroy(): Pool
     {
-        if ($this->pool === null) {
+        if (null === $this->pool) {
             throw new PoolConnectionException('You cannot destroy connection that does not have a pool.');
         }
 

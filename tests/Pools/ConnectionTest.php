@@ -2,25 +2,26 @@
 
 namespace Utopia\Tests;
 
-use Utopia\Pools\Exception\PoolConnectionException;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Utopia\Pools\Connection;
+use Utopia\Pools\Exception\PoolConnectionException;
 use Utopia\Pools\Pool;
 
-class ConnectionTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(Connection::class)]
+final class ConnectionTest extends TestCase
 {
     /**
      * @var Connection<string>
      */
     protected Connection $object;
 
-    public function setUp(): void
-    {
-        $this->object = new Connection('x');
-    }
-
     public function testGetID(): void
     {
+        $this->object = new Connection('x');
         $this->assertEquals(null, $this->object->getID());
 
         $this->object->setID('test');
@@ -30,50 +31,59 @@ class ConnectionTest extends TestCase
 
     public function testSetID(): void
     {
+        $this->object = new Connection('x');
         $this->assertEquals(null, $this->object->getID());
 
-        $this->assertInstanceOf(Connection::class, $this->object->setID('test'));
+        $this->object->setID('test');
+        $this->assertInstanceOf(Connection::class, $this->object);
 
         $this->assertEquals('test', $this->object->getID());
     }
 
     public function testGetResource(): void
     {
+        $this->object = new Connection('x');
         $this->assertEquals('x', $this->object->getResource());
     }
 
     public function testSetResource(): void
     {
+        $this->object = new Connection('x');
         $this->assertEquals('x', $this->object->getResource());
 
-        $this->assertInstanceOf(Connection::class, $this->object->setResource('y'));
+        $this->object->setResource('y');
+        $this->assertInstanceOf(Connection::class, $this->object);
 
         $this->assertEquals('y', $this->object->getResource());
     }
 
     public function testSetPool(): void
     {
+        $this->object = new Connection('x');
         $pool = new Pool('test', 1, function () {
             return 'x';
         });
 
         $this->assertNull($this->object->getPool());
-        $this->assertInstanceOf(Connection::class, $this->object->setPool($pool));
+        $this->object->setPool($pool);
+        $this->assertInstanceOf(Connection::class, $this->object);
     }
 
     public function testGetPool(): void
     {
+        $this->object = new Connection('x');
         $pool = new Pool('test', 1, function () {
             return 'x';
         });
 
         $this->assertNull($this->object->getPool());
-        $this->assertInstanceOf(Connection::class, $this->object->setPool($pool));
+        $this->object->setPool($pool);
+        $this->assertInstanceOf(Connection::class, $this->object);
 
         $pool = $this->object->getPool();
 
-        if ($pool === null) {
-            throw new PoolConnectionException("Pool should never be null here.");
+        if (null === $pool) {
+            throw new PoolConnectionException('Pool should never be null here.');
         }
 
         $this->assertInstanceOf(Pool::class, $pool);
@@ -107,6 +117,7 @@ class ConnectionTest extends TestCase
 
     public function testReclaimException(): void
     {
+        $this->object = new Connection('x');
         $this->expectException(PoolConnectionException::class);
         $this->object->reclaim();
     }
@@ -115,7 +126,8 @@ class ConnectionTest extends TestCase
     {
         $i = 0;
         $object = new Pool('testDestroy', 2, function () use (&$i) {
-            $i++;
+            ++$i;
+
             return $i <= 2 ? 'x' : 'y';
         });
 

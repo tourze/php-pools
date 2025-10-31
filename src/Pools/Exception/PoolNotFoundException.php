@@ -2,8 +2,6 @@
 
 namespace Utopia\Pools\Exception;
 
-use RuntimeException;
-
-class PoolNotFoundException extends RuntimeException
+class PoolNotFoundException extends \RuntimeException
 {
 }

@@ -2,43 +2,52 @@
 
 namespace Utopia\Tests;
 
-use Utopia\Pools\Exception\PoolEmptyException;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Utopia\Pools\Connection;
+use Utopia\Pools\Exception\PoolEmptyException;
 use Utopia\Pools\Pool;
-use Utopia\Telemetry\Adapter\Test as TestTelemetry;
 
-class PoolTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(Pool::class)]
+final class PoolTest extends TestCase
 {
     /**
      * @var Pool<string>
      */
     protected Pool $object;
 
-    public function setUp(): void
+    public function testGetName(): void
     {
         $this->object = new Pool('test', 5, function () {
             return 'x';
         });
-    }
-
-    public function testGetName(): void
-    {
         $this->assertEquals('test', $this->object->getName());
     }
 
     public function testGetSize(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(5, $this->object->getSize());
     }
 
     public function testGetReconnectAttempts(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(3, $this->object->getReconnectAttempts());
     }
 
     public function testSetReconnectAttempts(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(3, $this->object->getReconnectAttempts());
 
         $this->object->setReconnectAttempts(20);
@@ -48,11 +57,17 @@ class PoolTest extends TestCase
 
     public function testGetReconnectSleep(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(1, $this->object->getReconnectSleep());
     }
 
     public function testSetReconnectSleep(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(1, $this->object->getReconnectSleep());
 
         $this->object->setReconnectSleep(20);
@@ -62,11 +77,17 @@ class PoolTest extends TestCase
 
     public function testGetRetryAttempts(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(3, $this->object->getRetryAttempts());
     }
 
     public function testSetRetryAttempts(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(3, $this->object->getRetryAttempts());
 
         $this->object->setRetryAttempts(20);
@@ -76,11 +97,17 @@ class PoolTest extends TestCase
 
     public function testGetRetrySleep(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(1, $this->object->getRetrySleep());
     }
 
     public function testSetRetrySleep(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(1, $this->object->getRetrySleep());
 
         $this->object->setRetrySleep(20);
@@ -90,6 +117,9 @@ class PoolTest extends TestCase
 
     public function testPop(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(5, $this->object->count());
 
         $connection = $this->object->pop();
@@ -111,8 +141,11 @@ class PoolTest extends TestCase
 
     public function testUse(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(5, $this->object->count());
-        $this->object->use(function ($resource) {
+        $this->object->use(function ($resource): void {
             $this->assertEquals(4, $this->object->count());
             $this->assertEquals('x', $resource);
         });
@@ -122,6 +155,9 @@ class PoolTest extends TestCase
 
     public function testPush(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(5, $this->object->count());
 
         $connection = $this->object->pop();
@@ -138,6 +174,9 @@ class PoolTest extends TestCase
 
     public function testCount(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(5, $this->object->count());
 
         $connection = $this->object->pop();
@@ -151,6 +190,9 @@ class PoolTest extends TestCase
 
     public function testReclaim(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(5, $this->object->count());
 
         $this->object->pop();
@@ -166,6 +208,9 @@ class PoolTest extends TestCase
 
     public function testIsEmpty(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->object->pop();
         $this->object->pop();
         $this->object->pop();
@@ -177,6 +222,9 @@ class PoolTest extends TestCase
 
     public function testIsFull(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->assertEquals(true, $this->object->isFull());
 
         $connection = $this->object->pop();
@@ -210,6 +258,9 @@ class PoolTest extends TestCase
 
     public function testRetry(): void
     {
+        $this->object = new Pool('test', 5, function () {
+            return 'x';
+        });
         $this->object->setReconnectAttempts(2);
         $this->object->setReconnectSleep(2);
 
@@ -235,7 +286,8 @@ class PoolTest extends TestCase
     {
         $i = 0;
         $object = new Pool('testDestroy', 2, function () use (&$i) {
-            $i++;
+            ++$i;
+
             return $i <= 2 ? 'x' : 'y';
         });
 

@@ -2,22 +2,23 @@
 
 namespace Utopia\Tests;
 
-use Utopia\Pools\Exception\PoolNotFoundException;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Utopia\Pools\Exception\PoolNotFoundException;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 
-class GroupTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(Group::class)]
+final class GroupTest extends TestCase
 {
     protected Group $object;
 
-    public function setUp(): void
-    {
-        $this->object = new Group();
-    }
-
     public function testAdd(): void
     {
+        $this->object = new Group();
         $this->object->add(new Pool('test', 1, function () {
             return 'x';
         }));
@@ -27,6 +28,7 @@ class GroupTest extends TestCase
 
     public function testGet(): void
     {
+        $this->object = new Group();
         $this->object->add(new Pool('test', 1, function () {
             return 'x';
         }));
@@ -40,6 +42,7 @@ class GroupTest extends TestCase
 
     public function testRemove(): void
     {
+        $this->object = new Group();
         $this->object->add(new Pool('test', 1, function () {
             return 'x';
         }));
@@ -53,8 +56,9 @@ class GroupTest extends TestCase
         $this->assertInstanceOf(Pool::class, $this->object->get('test'));
     }
 
-    public function testReset(): void
+    public function testReclaim(): void
     {
+        $this->object = new Group();
         $this->object->add(new Pool('test', 5, function () {
             return 'x';
         }));
@@ -74,6 +78,7 @@ class GroupTest extends TestCase
 
     public function testReconnectAttempts(): void
     {
+        $this->object = new Group();
         $this->object->add(new Pool('test', 5, function () {
             return 'x';
         }));
@@ -87,6 +92,7 @@ class GroupTest extends TestCase
 
     public function testReconnectSleep(): void
     {
+        $this->object = new Group();
         $this->object->add(new Pool('test', 5, function () {
             return 'x';
         }));
@@ -100,6 +106,7 @@ class GroupTest extends TestCase
 
     public function testUse(): void
     {
+        $this->object = new Group();
         $pool1 = new Pool('pool1', 1, fn () => '1');
         $pool2 = new Pool('pool2', 1, fn () => '2');
         $pool3 = new Pool('pool3', 1, fn () => '3');
@@ -113,7 +120,7 @@ class GroupTest extends TestCase
         $this->assertEquals(1, $pool3->count());
 
         // @phpstan-ignore argument.type
-        $this->object->use(['pool1', 'pool3'], function ($one, $three) use ($pool1, $pool2, $pool3) {
+        $this->object->use(['pool1', 'pool3'], function ($one, $three) use ($pool1, $pool2, $pool3): void {
             $this->assertEquals('1', $one);
             $this->assertEquals('3', $three);
 

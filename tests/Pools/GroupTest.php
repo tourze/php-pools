@@ -118,8 +118,6 @@ final class GroupTest extends TestCase
         $this->assertEquals(1, $pool1->count());
         $this->assertEquals(1, $pool2->count());
         $this->assertEquals(1, $pool3->count());
-
-        // @phpstan-ignore argument.type
         $this->object->use(['pool1', 'pool3'], function ($one, $three) use ($pool1, $pool2, $pool3): void {
             $this->assertEquals('1', $one);
             $this->assertEquals('3', $three);
